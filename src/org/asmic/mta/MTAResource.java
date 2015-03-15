@@ -31,10 +31,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.asmic.mta.dko.mta.Calendar;
@@ -49,6 +51,8 @@ import org.asmic.mta.util.TimestampedSupplier;
 import org.kered.dko.Condition;
 import org.kered.dko.Field;
 import org.kered.dko.Join;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -61,6 +65,7 @@ public class MTAResource {
 
 	final private TimestampedSupplier<StatusMap> statusSupplier;
 	final private TimestampedSupplier<Map<String, TripUpdate>> realtimeData;
+	final Logger logger = LoggerFactory.getLogger(MTAResource.class);
 
 	@Inject
 	public MTAResource(TimestampedSupplier<StatusMap> statusSupplier,
@@ -68,21 +73,26 @@ public class MTAResource {
 		this.statusSupplier = statusSupplier;
 		this.realtimeData = realtimeData;
 	}
+	
+	private void logRequest(String endpoint, HttpServletRequest req) {
+		logger.info(endpoint + " request " + req.getRemoteAddr());
+	}
 
 	@GET
 	@Path("/status")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> getStatuses() {
+	public Map<String, Object> getStatuses(@Context HttpServletRequest req) {
 		Map<String, Object> result = new HashMap<>();
 		result.put("results", statusSupplier.get());
 		result.put("statusTimestamp", statusSupplier.getTimestamp());
+		logRequest("/status", req);
 		return result;
 	}
 
 	@GET
 	@Path("/arrivals")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Line> getArrivalsForStation(@QueryParam("station") final String stationName,
+	public Map<String, Line> getArrivalsForStation(@Context HttpServletRequest req, @QueryParam("station") final String stationName,
 			@QueryParam("line") final List<String> lines, final @QueryParam("date") Long longTime,
 			@QueryParam("direction") final String direction) {
 
@@ -126,6 +136,7 @@ public class MTAResource {
 			lineResult.setArrivals(transformedArrivals);
 			result.put(line, lineResult);
 		}
+		logRequest("/arrivals", req);
 		return result;
 	}
 
@@ -226,18 +237,21 @@ public class MTAResource {
 	@GET
 	@Path("/stationDetails")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> getStationDetails(@QueryParam("station") String stationName) {
+	public List<String> getStationDetails(@Context HttpServletRequest req, @QueryParam("station") String stationName) {
 		final List<String> stopIds = Stops.ALL.where(Stops.STOP_NAME.eq(stationName)).asList(Stops.STOP_ID);
 
 		final List<String> trips = Trips.ALL.with(Trips.FK_TRIP_STOP_TIMES).where(StopTimes.STOP_ID.in(stopIds))
 				.onlyFields(Trips.ROUTE_ID).groupBy(Trips.ROUTE_ID).asList(Trips.ROUTE_ID);
+		
+		logRequest("/stationDetails", req);
 		return trips;
 	}
 
 	@GET
 	@Path("/stations")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> getStopsLike(@QueryParam("like") String nameLike) {
+	public List<String> getStopsLike(@Context HttpServletRequest req, @QueryParam("like") String nameLike) {
+		logRequest("/stations", req);
 		return Stops.ALL.where(Stops.STOP_NAME.like("%" + nameLike + "%")).groupBy(Stops.STOP_NAME)
 				.onlyFields(Stops.STOP_NAME).asList(Stops.STOP_NAME);
 	}
