@@ -1,0 +1,11 @@
+bin/*
+build/*
+libs/dko.jar
+gen
+.gradle/*
+.project
+.DS_Store
+.classpath
+.settings/
+*.launch
+.externalToolBuilders/

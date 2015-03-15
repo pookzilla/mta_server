@@ -1,0 +1,135 @@
+A Java server that will provide a simple REST interface into an amalgamation of the static MTA transit data, the realtime data, 
+and the (periodically updated) serviceStatus.txt
+
+Obtain an MTA API key (TODO)
+---------------------
+
+Obtain the static MTA data files (TODO)
+--------------------------------
+
+Download and build DKO library (TODO)
+------------------------------
+
+This project utilizes the DKO (Data Knowledge Objects) package located at https://github.com/keredson/DKO. You must download and 
+compile this package, copying the resulting dko.jar into a libs directory located off the root of this project. If the DKO package
+ever makes it into maven this requirement will be removed.
+
+Build the source (TODO)
+----------------
+
+Run the CreateDatabase class (TODO: add the right classpath here and figure out sensible heap size):
+----------------------------
+
+	java -Xmx512 org.asmic.mta.util.CreateDatabase <path to directory in which to create database> <path to location of unzipped static data files>
+
+Note that this data is updated periodically - you will need to re-download this data and run this command whenever that happens.
+
+Generate DKO classes (TODO)
+--------------------
+
+	This application relies on the DKO package for interfacing with an embedded instance of SQL server. Prior to running this 
+	application you must generate the accessor classes from the created database via the generate_dkos.sh script in the script 
+	directory. Also included in this directory is a create_schema.sh that you should never need to run - it is responsible for
+	creating the schemas.json file (that is then used to generate these accessor classes.)  If for whatever reason you do need to
+	run this script you will likely need to modify the classpath to point at your local copy of the database jars.
+	
+Launch server (TODO: add the right classpath here and figure out sensible heap size):
+-------------
+
+	java -Xmx512 org.asmic.mta.Main <path to directory in which database was created> <transit API key>
+	
+Test the endpoints
+------------------
+
+	/rest/status
+	----------------
+	
+	This endpoint (with no arguments) will return a condensed and easily digestable version of the MTA serviceStatus.txt file broken down 
+	by line. Delivered with these results is a timestamp specifying the last time the data was refreshed by the server.
+	
+	GET http://localhost:23432/rest/status
+	
+	should return results such as :
+	
+	{
+		"statusTimestamp": 1426372668826,
+		"results": {
+			"7": {
+				"delays": "Due to signal problems at 33 St-Rawson St, Main St bound [7] trains are running with delays.Allow additional travel time."
+			},
+			"F": {
+				"delays": "Due to signal problems at 4 Av-9 St, southbound [F] and [G] trains are running with delays.Allow additional travel time."
+			},
+			"G": {
+				"delays": "Due to signal problems at 4 Av-9 St, southbound [F] and [G] trains are running with delays.Allow additional travel time."
+			}
+		}
+	}
+	
+	/rest/stations?like=<string>
+	----------------
+	
+	This endopint will allow you to search for precise stations names matching a supplied string.
+	
+	http://localhost:23432/rest/stations?like=Cortland
+	
+	[
+		"Cortlandt St",
+		"Van Cortlandt Park - 242 St"
+	]
+	
+	/rest/arrivals?station=<station name as provided by /rest/stations endpoint>&line=<line>[&line=<another line>][&date=<unix timestamp>][&direction=southbound|northbound]
+	----------------
+	
+	This endpoint will provide scheduled arrival data (and realtime delay information where available) for user provided lines that service 
+	user-provided stations. The date is optional (defaulting to current time) as is the direction (with omission signifying both northbound 
+	and southbound routes.) Approximately one hour worth of arrivals will be returned by this call (though in the case of requests made near 
+	midnight a few more might be included.)  Included with the response are timestamps signifying the last successful realtime and status 
+	requests made by the server.
+	
+	http://localhost:23432/rest/arrivals?station=77+St&line=6&direction=southbound&date=1426305599000
+	
+	{
+		"6": {
+			"arrivals": [
+				{
+					"stopId": "627S",
+					"scheduledArrivalTime": 1426306140000,
+					"projectedArrivalTime": 1426306260000,
+					"headsign": "BROOKLYN BRIDGE - CITY HALL",
+					"direction": "southbound"
+				},
+				{
+					"stopId": "627S",
+					"scheduledArrivalTime": 1426306740000,
+					"projectedArrivalTime": 1426306810000,
+					"headsign": "BROOKLYN BRIDGE - CITY HALL",
+					"direction": "southbound"
+				},
+				{
+					"stopId": "627S",
+					"scheduledArrivalTime": 1426307400000,
+					"projectedArrivalTime": 1426307900000,
+					"headsign": "BROOKLYN BRIDGE - CITY HALL",
+					"direction": "southbound"
+				},
+				{
+					"stopId": "627S",
+					"scheduledArrivalTime": 1426308300000,
+					"projectedArrivalTime": 1426309100000,
+					"headsign": "BROOKLYN BRIDGE - CITY HALL",
+					"direction": "southbound"
+				}
+			],
+			"statusTimestamp": 1426293401796,
+			"realtimeTimestamp": 1426293401959,
+			"status": {
+				"delays": "Due to signal problems at 33 St-Rawson St, Main St bound [7] trains are running with delays.Allow additional travel time."
+			}
+		}
+	}
+	
+	Note that if realtime data is not available for a given line (or that line is experiencing good service) then "projectedArrivalTime" 
+	will be omitted from arrival results and no "status" object will be included.
+	
+		

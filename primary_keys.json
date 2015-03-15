@@ -1,0 +1,51 @@
+/* handrolled primary keys due to export issues */
+
+    "primary_keys": {"MTA": {
+        "trips": ["trip_id"],
+        "routes": ["route_id"],
+        "stops": ["stop_id"],
+        "calendar": ["service_id"],
+    }},
+    
+    "foreign_keys": {"FK_1": {
+        "reffing": [
+            "MTA",
+            "STOP_TIMES"
+        ],
+        "reffed": [
+            "MTA",
+            "STOPS"
+        ],
+        "columns": {"STOP_ID": "STOP_ID"}
+    }, "FK_2": {
+        "reffing": [
+            "MTA",
+            "TRIPS"
+        ],
+        "reffed": [
+            "MTA",
+            "ROUTES"
+        ],
+        "columns": {"ROUTE_ID": "ROUTE_ID"}
+    }, "FK_3": {
+        "reffing": [
+            "MTA",
+            "STOP_TIMES"
+        ],
+        "reffed": [
+            "MTA",
+            "TRIPS"
+        ],
+        "columns": {"TRIP_ID": "TRIP_ID"}
+    }, "FK_4": {
+        "reffing": [
+            "MTA",
+            "TRIPS"
+        ],
+        "reffed": [
+            "MTA",
+            "STOP_TIMES"
+        ],
+        "columns": {"TRIP_ID": "TRIP_ID"}
+    }        
+    }

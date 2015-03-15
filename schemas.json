@@ -1,0 +1,112 @@
+{
+    "version": [
+        0,
+        2,
+        0
+    ],
+    "schemas": {"MTA": {
+        "CALENDAR": {
+            "END_DATE": "CHARACTER VARYING",
+            "FRIDAY": "BOOLEAN",
+            "MONDAY": "BOOLEAN",
+            "SATURDAY": "BOOLEAN",
+            "SERVICE_ID": "CHARACTER VARYING",
+            "START_DATE": "CHARACTER VARYING",
+            "SUNDAY": "BOOLEAN",
+            "THURSDAY": "BOOLEAN",
+            "TUESDAY": "BOOLEAN",
+            "WEDNESDAY": "BOOLEAN"
+        },
+        "ROUTES": {
+            "AGENCY_ID": "CHARACTER VARYING",
+            "ROUTE_COLOR": "CHARACTER VARYING",
+            "ROUTE_DESC": "CHARACTER VARYING",
+            "ROUTE_ID": "CHARACTER VARYING",
+            "ROUTE_LONG_NAME": "CHARACTER VARYING",
+            "ROUTE_SHORT_NAME": "CHARACTER VARYING",
+            "ROUTE_TEXT_COLOR": "CHARACTER VARYING",
+            "ROUTE_TYPE": "INTEGER",
+            "ROUTE_URL": "CHARACTER VARYING"
+        },
+        "STOPS": {
+            "LOCATION_TYPE": "INTEGER",
+            "PARENT_STATION": "CHARACTER VARYING",
+            "STOP_CODE": "CHARACTER VARYING",
+            "STOP_DESC": "CHARACTER VARYING",
+            "STOP_ID": "CHARACTER VARYING",
+            "STOP_LAT": "DOUBLE",
+            "STOP_LON": "DOUBLE",
+            "STOP_NAME": "CHARACTER VARYING",
+            "STOP_URL": "INTEGER",
+            "ZONE_ID": "INTEGER"
+        },
+        "STOP_TIMES": {
+            "ARRIVAL_TIME": "INTEGER",
+            "DEPARTURE_TIME": "INTEGER",
+            "DROP_OFF_TYPE": "INTEGER",
+            "PICKUP_TYPE": "INTEGER",
+            "SHAPE_DIST_TRAVELED": "INTEGER",
+            "STOP_HEADSIGN": "CHARACTER VARYING",
+            "STOP_ID": "CHARACTER VARYING",
+            "STOP_SEQUENCE": "INTEGER",
+            "TRIP_ID": "CHARACTER VARYING"
+        },
+        "TRIPS": {
+            "BLOCK_ID": "INTEGER",
+            "DIRECTION_ID": "INTEGER",
+            "ROUTE_ID": "CHARACTER VARYING",
+            "SERVICE_ID": "CHARACTER VARYING",
+            "SHAPE_ID": "CHARACTER VARYING",
+            "TRIP_HEADSIGN": "CHARACTER VARYING",
+            "TRIP_ID": "CHARACTER VARYING"
+        }
+    }},
+    "primary_keys": {"MTA": {
+        "TRIPS": ["TRIP_ID"],
+        "ROUTES": ["ROUTE_ID"],
+        "STOPS": ["STOP_ID"],
+        "CALENDAR": ["SERVICE_ID"],
+    }},
+    "foreign_keys": {"FK_1": {
+        "reffing": [
+            "MTA",
+            "STOP_TIMES"
+        ],
+        "reffed": [
+            "MTA",
+            "STOPS"
+        ],
+        "columns": {"STOP_ID": "STOP_ID"}
+    }, "FK_2": {
+        "reffing": [
+            "MTA",
+            "TRIPS"
+        ],
+        "reffed": [
+            "MTA",
+            "ROUTES"
+        ],
+        "columns": {"ROUTE_ID": "ROUTE_ID"}
+    }, "FK_3": {
+        "reffing": [
+            "MTA",
+            "STOP_TIMES"
+        ],
+        "reffed": [
+            "MTA",
+            "TRIPS"
+        ],
+        "columns": {"TRIP_ID": "TRIP_ID"}
+    }, "FK_4": {
+        "reffing": [
+            "MTA",
+            "TRIPS"
+        ],
+        "reffed": [
+            "MTA",
+            "STOP_TIMES"
+        ],
+        "columns": {"TRIP_ID": "TRIP_ID"}
+    }        
+    }
+}
