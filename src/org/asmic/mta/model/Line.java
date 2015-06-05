@@ -48,11 +48,14 @@ public class Line {
 	private long statusTimestamp;
 	@JsonProperty
 	private long realtimeTimestamp;
+	@JsonProperty
+	private long serverTimestamp;
 	
-	public Line(StatusMap statusMap, long statusTimestamp, long realtimeTimestamp) {
+	public Line(StatusMap statusMap, long statusTimestamp, long realtimeTimestamp, long serverTimestamp) {
 		this.statusMap = statusMap;
 		this.statusTimestamp = statusTimestamp;
 		this.realtimeTimestamp = realtimeTimestamp;
+		this.serverTimestamp = serverTimestamp;
 	}
 
 	public String getLine() {

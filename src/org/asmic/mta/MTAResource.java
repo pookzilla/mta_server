@@ -131,7 +131,7 @@ public class MTAResource {
 				transformedArrivals.addAll(moreArrivals);
 			}
 
-			final Line lineResult = new Line(statusSupplier.get(), statusSupplier.getTimestamp(), realtimeTimestamp);
+			final Line lineResult = new Line(statusSupplier.get(), statusSupplier.getTimestamp(), realtimeTimestamp, System.currentTimeMillis());
 			lineResult.setLine(line);
 			lineResult.setArrivals(transformedArrivals);
 			result.put(line, lineResult);
