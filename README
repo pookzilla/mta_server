@@ -58,7 +58,7 @@ should return results such as :
   }
 }
 
-/rest/stations?like=<string>
+/rest/stations<?like=<string>>
 ----------------
 
 This endopint will allow you to search for precise stations names matching a supplied string.
@@ -66,9 +66,24 @@ This endopint will allow you to search for precise stations names matching a sup
 http://localhost:23432/rest/stations?like=Cortland
 
 [
-  "Cortlandt St",
-  "Van Cortlandt Park - 242 St"
+  {
+    "station": "Cortlandt St",
+    "longitude": -74.012188,
+    "latitude": 40.711835
+  },
+  {
+    "station": "Cortlandt St",
+    "longitude": -74.011029,
+    "latitude": 40.710668
+  },
+  {
+    "station": "Van Cortlandt Park - 242 St",
+    "longitude": -73.898583,
+    "latitude": 40.889248
+  }
 ]
+
+To get a list of all stations simply omit the "like" parameter. Please note that duplicates are possible in this list as there is no guarantee that station names are unique.
 
 /rest/arrivals?station=<station name as provided by /rest/stations endpoint>&line=<line>[&line=<another line>][&date=<unix timestamp>][&direction=southbound|northbound]
 ----------------
