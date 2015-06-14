@@ -39,6 +39,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.asmic.mta.dko.QueryUtils;
 import org.asmic.mta.dko.mta.Calendar;
 import org.asmic.mta.dko.mta.StopTimes;
 import org.asmic.mta.dko.mta.Stops;
@@ -51,9 +52,11 @@ import org.asmic.mta.util.TimestampedSupplier;
 import org.kered.dko.Condition;
 import org.kered.dko.Field;
 import org.kered.dko.Join;
+import org.kered.dko.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
@@ -73,7 +76,7 @@ public class MTAResource {
 		this.statusSupplier = statusSupplier;
 		this.realtimeData = realtimeData;
 	}
-	
+
 	private void logRequest(String endpoint, HttpServletRequest req) {
 		logger.info(endpoint + " request " + req.getRemoteAddr());
 	}
@@ -92,9 +95,9 @@ public class MTAResource {
 	@GET
 	@Path("/arrivals")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Line> getArrivalsForStation(@Context HttpServletRequest req, @QueryParam("station") final String stationName,
-			@QueryParam("line") final List<String> lines, final @QueryParam("date") Long longTime,
-			@QueryParam("direction") final String direction) {
+	public Map<String, Line> getArrivalsForStation(@Context HttpServletRequest req,
+			@QueryParam("station") final String stationName, @QueryParam("line") final List<String> lines,
+			final @QueryParam("date") Long longTime, @QueryParam("direction") final String direction) {
 
 		final Date date = longTime == null ? new Date() : new Date(longTime);
 
@@ -131,7 +134,8 @@ public class MTAResource {
 				transformedArrivals.addAll(moreArrivals);
 			}
 
-			final Line lineResult = new Line(statusSupplier.get(), statusSupplier.getTimestamp(), realtimeTimestamp, System.currentTimeMillis());
+			final Line lineResult = new Line(statusSupplier.get(), statusSupplier.getTimestamp(), realtimeTimestamp,
+					System.currentTimeMillis());
 			lineResult.setLine(line);
 			lineResult.setArrivals(transformedArrivals);
 			result.put(line, lineResult);
@@ -242,7 +246,7 @@ public class MTAResource {
 
 		final List<String> trips = Trips.ALL.with(Trips.FK_TRIP_STOP_TIMES).where(StopTimes.STOP_ID.in(stopIds))
 				.onlyFields(Trips.ROUTE_ID).groupBy(Trips.ROUTE_ID).asList(Trips.ROUTE_ID);
-		
+
 		logRequest("/stationDetails", req);
 		return trips;
 	}
@@ -250,9 +254,26 @@ public class MTAResource {
 	@GET
 	@Path("/stations")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> getStopsLike(@Context HttpServletRequest req, @QueryParam("like") String nameLike) {
+	public List<Map<String, Object>> getStopsLike(@Context HttpServletRequest req, @QueryParam("like") String nameLike) {
 		logRequest("/stations", req);
-		return Stops.ALL.where(Stops.STOP_NAME.like("%" + nameLike + "%")).groupBy(Stops.STOP_NAME)
-				.onlyFields(Stops.STOP_NAME).asList(Stops.STOP_NAME);
+		Query<Stops> stops = Stops.ALL.where(Stops.LOCATION_TYPE.eq(1));
+		if (nameLike != null && nameLike.length() > 0) {
+			stops = stops.where(Stops.STOP_NAME.like("%" + nameLike + "%"));
+		}
+		return QueryUtils.asListOfMaps(stops.onlyFields(Stops.STOP_NAME, Stops.STOP_LAT, Stops.STOP_LON),
+				new Function<Field<?>, String>() {
+
+					@Override
+					public String apply(Field<?> input) {
+						if (Stops.STOP_NAME == input) {
+							return "station";
+						} else if (Stops.STOP_LAT == input) {
+							return "latitude";
+						} else if (Stops.STOP_LON == input) {
+							return "longitude";
+						}
+						return null;
+					}
+				}, Stops.STOP_NAME, Stops.STOP_LAT, Stops.STOP_LON);
 	}
 }
